@@ -9,6 +9,7 @@ use crate::nbd::NBDServer;
 use crate::parse_object_store::parse_url_opts;
 use anyhow::{Context, Result};
 use arc_swap::ArcSwap;
+use sd_notify::NotifyState;
 use slatedb::DbBuilder;
 use slatedb::DbReader;
 use slatedb::admin::AdminBuilder;
@@ -523,6 +524,9 @@ pub async fn run_server(config_path: PathBuf, read_only: bool) -> Result<()> {
             "No servers configured. At least one server (NFS, 9P, or NBD) must be enabled."
         ));
     }
+
+    // signal ready
+    sd_notify::notify(true, &[NotifyState::Ready]).ok();
 
     tokio::select! {
         result = futures::future::select_all(server_handles) => {
